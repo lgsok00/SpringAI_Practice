@@ -50,8 +50,8 @@ public class OpenAIService {
 
         // 옵션
         OpenAiChatOptions options = OpenAiChatOptions.builder()
-                .model("gpt-4.1-mini")
-                .temperature(0.7)
+                .model("gpt-5-mini")
+                .temperature(1.0)    // gpt-5 모델은 temperature 값 무조건 1.0
                 .build();
 
         // 프롬프트
@@ -72,8 +72,8 @@ public class OpenAIService {
 
         // 옵션
         OpenAiChatOptions options = OpenAiChatOptions.builder()
-                .model("gpt-4.1-mini")
-                .temperature(0.7)
+                .model("gpt-5-mini")
+                .temperature(1.0)    // gpt-5 모델은 temperature 값 무조건 1.0
                 .build();
 
         // 프롬프트
