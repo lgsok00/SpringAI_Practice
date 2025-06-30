@@ -4,6 +4,9 @@ import org.springframework.ai.audio.transcription.AudioTranscriptionPrompt;
 import org.springframework.ai.audio.transcription.AudioTranscriptionResponse;
 import org.springframework.ai.audio.tts.TextToSpeechPrompt;
 import org.springframework.ai.audio.tts.TextToSpeechResponse;
+import org.springframework.ai.chat.memory.ChatMemory;
+import org.springframework.ai.chat.memory.ChatMemoryRepository;
+import org.springframework.ai.chat.memory.MessageWindowChatMemory;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
@@ -32,13 +35,16 @@ public class OpenAIService {
     private final OpenAiAudioSpeechModel openAiAudioSpeechModel;
     private final OpenAiAudioTranscriptionModel openAiAudioTranscriptionModel;
 
+    private final ChatMemoryRepository chatMemoryRepository;
+
     // 생성자
-    public OpenAIService(OpenAiChatModel openAiChatModel, OpenAiEmbeddingModel openAiEmbeddingModel, OpenAiImageModel openAiImageModel, OpenAiAudioSpeechModel openAiAudioSpeechModel, OpenAiAudioTranscriptionModel openAiAudioTranscriptionModel) {
+    public OpenAIService(OpenAiChatModel openAiChatModel, OpenAiEmbeddingModel openAiEmbeddingModel, OpenAiImageModel openAiImageModel, OpenAiAudioSpeechModel openAiAudioSpeechModel, OpenAiAudioTranscriptionModel openAiAudioTranscriptionModel, ChatMemoryRepository chatMemoryRepository) {
         this.openAiChatModel = openAiChatModel;
         this.openAiEmbeddingModel = openAiEmbeddingModel;
         this.openAiImageModel = openAiImageModel;
         this.openAiAudioSpeechModel = openAiAudioSpeechModel;
         this.openAiAudioTranscriptionModel = openAiAudioTranscriptionModel;
+        this.chatMemoryRepository = chatMemoryRepository;
     }
 
     // 1. Chat model: response(모든 응답 생성 후 전체 응답으로 반환)
@@ -65,10 +71,15 @@ public class OpenAIService {
 
     // 1. Chat model: stream(토큰 단위로 생성되는 스트림 형태)
     public Flux<String> generateStream(String text) {
-        // 메시지
-        SystemMessage systemMessage = new SystemMessage("");
-        UserMessage userMessage = new UserMessage(text);
-        AssistantMessage assistantMessage = new AssistantMessage("");
+        // 유저 & 페이지 별 ChatMemory를 관리하기 위한 key (명시적)
+        String userId = "xxxjjhhh" + "_" + "3";
+
+        ChatMemory chatMemory = MessageWindowChatMemory.builder()
+                .maxMessages(10)
+                .chatMemoryRepository(chatMemoryRepository)
+                .build();
+
+        chatMemory.add(userId, new UserMessage(text));  // 신규 메시지도 추가
 
         // 옵션
         OpenAiChatOptions options = OpenAiChatOptions.builder()
@@ -77,10 +88,25 @@ public class OpenAIService {
                 .build();
 
         // 프롬프트
-        Prompt prompt = new Prompt(List.of(systemMessage, userMessage, assistantMessage), options);
+        Prompt prompt = new Prompt(chatMemory.get(userId), options);
+
+        // 응답 메시지를 저장할 임시 버퍼
+        StringBuilder responseBuffer = new StringBuilder();
 
         return openAiChatModel.stream(prompt)
-                .mapNotNull(response -> response.getResult().getOutput().getText());
+                .mapNotNull(response -> {
+                    String token = response.getResult().getOutput().getText();
+                    // null 값과 "null" 문자열을 모두 필터링
+                    if (token != null && !"null".equals(token) && !token.trim().isEmpty()) {
+                        responseBuffer.append(token);
+                        return token;
+                    }
+                    return null;
+                })
+                .doOnComplete(() -> {
+                    chatMemory.add(userId, new AssistantMessage(responseBuffer.toString()));
+                    chatMemoryRepository.saveAll(userId, chatMemory.get(userId));
+                });
     }
 
     // 2. Embedding model API 호출 메서드
