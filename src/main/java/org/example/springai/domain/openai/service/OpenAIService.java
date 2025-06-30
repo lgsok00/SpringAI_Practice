@@ -25,6 +25,7 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 
 import java.util.List;
+import java.util.Objects;
 
 @Service
 public class OpenAIService {
@@ -94,15 +95,9 @@ public class OpenAIService {
         StringBuilder responseBuffer = new StringBuilder();
 
         return openAiChatModel.stream(prompt)
-                .mapNotNull(response -> {
-                    String token = response.getResult().getOutput().getText();
-                    // null 값과 "null" 문자열을 모두 필터링
-                    if (token != null && !"null".equals(token) && !token.trim().isEmpty()) {
-                        responseBuffer.append(token);
-                        return token;
-                    }
-                    return null;
-                })
+                .mapNotNull(chunk -> chunk.getResult().getOutput().getText())
+                .filter(Objects::nonNull)   // null 객체만 제거
+                .doOnNext(responseBuffer::append)
                 .doOnComplete(() -> {
                     chatMemory.add(userId, new AssistantMessage(responseBuffer.toString()));
                     chatMemoryRepository.saveAll(userId, chatMemory.get(userId));
