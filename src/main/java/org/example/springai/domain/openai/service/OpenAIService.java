@@ -6,6 +6,7 @@ import org.springframework.ai.audio.transcription.AudioTranscriptionPrompt;
 import org.springframework.ai.audio.transcription.AudioTranscriptionResponse;
 import org.springframework.ai.audio.tts.TextToSpeechPrompt;
 import org.springframework.ai.audio.tts.TextToSpeechResponse;
+import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.memory.ChatMemoryRepository;
 import org.springframework.ai.chat.memory.MessageWindowChatMemory;
@@ -78,8 +79,10 @@ public class OpenAIService {
 
     // 1. Chat model: stream(토큰 단위로 생성되는 스트림 형태)
     public Flux<String> generateStream(String text) {
+        ChatClient chatClient = ChatClient.create(openAiChatModel);
+
         // 유저 & 페이지 별 ChatMemory를 관리하기 위한 key (명시적)
-        String userId = "xxxjjhhh" + "_" + "3";
+        String userId = "xxxjjhhh" + "_" + "4";
 
         // 전체 대화 저장
         ChatEntity chatUserEntity = new ChatEntity();
@@ -107,16 +110,13 @@ public class OpenAIService {
         // 응답 메시지를 저장할 임시 버퍼
         StringBuilder responseBuffer = new StringBuilder();
 
-        return openAiChatModel.stream(prompt)
-                .mapNotNull(response -> {
-                    String token = response.getResult().getOutput().getText();
-
-                    if (token != null) {    // null 응답 객체 제거
-                        responseBuffer.append(token);
-                        return token;
-                    }
-
-                    return null;
+        // 요청 및 응답
+        return chatClient.prompt(prompt)
+                .stream()
+                .content()
+                .map(token -> {
+                    responseBuffer.append(token);
+                    return token;
                 })
 
                 .doOnComplete(() -> {
