@@ -1,5 +1,6 @@
 package org.example.springai.api;
 
+import org.example.springai.domain.openai.dto.CityResponseDTO;
 import org.example.springai.domain.openai.entity.ChatEntity;
 import org.example.springai.domain.openai.service.ChatService;
 import org.example.springai.domain.openai.service.OpenAIService;
@@ -30,7 +31,7 @@ public class ChatController {
     // Chat model: non-stream
     @ResponseBody
     @PostMapping("/chat")
-    public String chat(@RequestBody Map<String, String> body) {
+    public CityResponseDTO chat(@RequestBody Map<String, String> body) {
         return openAIService.generate(body.get("text"));
     }
 

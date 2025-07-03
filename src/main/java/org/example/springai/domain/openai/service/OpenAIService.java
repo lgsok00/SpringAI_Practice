@@ -1,5 +1,6 @@
 package org.example.springai.domain.openai.service;
 
+import org.example.springai.domain.openai.dto.CityResponseDTO;
 import org.example.springai.domain.openai.entity.ChatEntity;
 import org.example.springai.domain.openai.repository.ChatRepository;
 import org.springframework.ai.audio.transcription.AudioTranscriptionPrompt;
@@ -29,7 +30,6 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 
 import java.util.List;
-import java.util.Objects;
 
 @Service
 public class OpenAIService {
@@ -56,7 +56,9 @@ public class OpenAIService {
     }
 
     // 1. Chat model: response(모든 응답 생성 후 전체 응답으로 반환)
-    public String generate(String text) {
+    public CityResponseDTO generate(String text) {
+        ChatClient chatClient = ChatClient.create(openAiChatModel);
+
         // 메시지
         SystemMessage systemMessage = new SystemMessage("");
         UserMessage userMessage = new UserMessage(text);
@@ -72,9 +74,9 @@ public class OpenAIService {
         Prompt prompt = new Prompt(List.of(systemMessage, userMessage, assistantMessage), options);
 
         // 요청 및 응답
-        ChatResponse response = openAiChatModel.call(prompt);
-
-        return response.getResult().getOutput().getText();
+        return chatClient.prompt(prompt)
+                .call()
+                .entity(CityResponseDTO.class);
     }
 
     // 1. Chat model: stream(토큰 단위로 생성되는 스트림 형태)
