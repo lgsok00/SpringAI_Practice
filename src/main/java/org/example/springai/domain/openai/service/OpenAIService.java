@@ -114,6 +114,7 @@ public class OpenAIService {
 
         // 요청 및 응답
         return chatClient.prompt(prompt)
+                .tools(new ChatTools())
                 .stream()
                 .content()
                 .map(token -> {
