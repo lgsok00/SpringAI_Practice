@@ -40,6 +40,12 @@ dependencies {
     // JPA
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 
+    // Spring AI: RAG Advisor
+    implementation 'org.springframework.ai:spring-ai-advisors-vector-store'
+
+    // Spring AI: Elasticsearch
+    implementation 'org.springframework.ai:spring-ai-starter-vector-store-elasticsearch'
+
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'

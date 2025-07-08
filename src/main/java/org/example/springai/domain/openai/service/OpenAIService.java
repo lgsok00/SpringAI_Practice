@@ -8,6 +8,8 @@ import org.springframework.ai.audio.transcription.AudioTranscriptionResponse;
 import org.springframework.ai.audio.tts.TextToSpeechPrompt;
 import org.springframework.ai.audio.tts.TextToSpeechResponse;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.client.advisor.api.Advisor;
+import org.springframework.ai.chat.client.advisor.vectorstore.QuestionAnswerAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.memory.ChatMemoryRepository;
 import org.springframework.ai.chat.memory.MessageWindowChatMemory;
@@ -15,7 +17,6 @@ import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.MessageType;
 import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
-import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.embedding.Embedding;
 import org.springframework.ai.embedding.EmbeddingOptions;
@@ -25,6 +26,8 @@ import org.springframework.ai.image.ImagePrompt;
 import org.springframework.ai.image.ImageResponse;
 import org.springframework.ai.openai.*;
 import org.springframework.ai.openai.api.OpenAiAudioApi;
+import org.springframework.ai.vectorstore.SearchRequest;
+import org.springframework.ai.vectorstore.elasticsearch.ElasticsearchVectorStore;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -39,13 +42,15 @@ public class OpenAIService {
     private final OpenAiImageModel openAiImageModel;
     private final OpenAiAudioSpeechModel openAiAudioSpeechModel;
     private final OpenAiAudioTranscriptionModel openAiAudioTranscriptionModel;
-
     private final ChatMemoryRepository chatMemoryRepository;
-
     private final ChatRepository chatRepository;
+    private final ElasticsearchVectorStore elasticsearchVectorStore;
 
     // 생성자
-    public OpenAIService(OpenAiChatModel openAiChatModel, OpenAiEmbeddingModel openAiEmbeddingModel, OpenAiImageModel openAiImageModel, OpenAiAudioSpeechModel openAiAudioSpeechModel, OpenAiAudioTranscriptionModel openAiAudioTranscriptionModel, ChatMemoryRepository chatMemoryRepository, ChatRepository chatRepository) {
+    public OpenAIService(OpenAiChatModel openAiChatModel, OpenAiEmbeddingModel openAiEmbeddingModel,
+                         OpenAiImageModel openAiImageModel, OpenAiAudioSpeechModel openAiAudioSpeechModel,
+                         OpenAiAudioTranscriptionModel openAiAudioTranscriptionModel, ChatMemoryRepository chatMemoryRepository,
+                         ChatRepository chatRepository, ElasticsearchVectorStore elasticsearchVectorStore) {
         this.openAiChatModel = openAiChatModel;
         this.openAiEmbeddingModel = openAiEmbeddingModel;
         this.openAiImageModel = openAiImageModel;
@@ -53,6 +58,7 @@ public class OpenAIService {
         this.openAiAudioTranscriptionModel = openAiAudioTranscriptionModel;
         this.chatMemoryRepository = chatMemoryRepository;
         this.chatRepository = chatRepository;
+        this.elasticsearchVectorStore = elasticsearchVectorStore;
     }
 
     // 1. Chat model: response(모든 응답 생성 후 전체 응답으로 반환)
@@ -106,6 +112,11 @@ public class OpenAIService {
                 .temperature(1.0)    // gpt-5 모델은 temperature 값 무조건 1.0
                 .build();
 
+        // RAG
+        Advisor ragAdvisor = QuestionAnswerAdvisor.builder(elasticsearchVectorStore)
+                .searchRequest(SearchRequest.builder().similarityThreshold(0.8d).topK(6).build())
+                .build();
+
         // 프롬프트
         Prompt prompt = new Prompt(chatMemory.get(userId), options);
 
@@ -115,6 +126,7 @@ public class OpenAIService {
         // 요청 및 응답
         return chatClient.prompt(prompt)
                 .tools(new ChatTools())
+                .advisors(ragAdvisor)
                 .stream()
                 .content()
                 .map(token -> {
