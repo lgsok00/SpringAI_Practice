@@ -25,6 +25,7 @@ import org.springframework.ai.embedding.EmbeddingResponse;
 import org.springframework.ai.image.ImagePrompt;
 import org.springframework.ai.image.ImageResponse;
 import org.springframework.ai.openai.*;
+import org.springframework.ai.openai.api.OpenAiApi;
 import org.springframework.ai.openai.api.OpenAiAudioApi;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.elasticsearch.ElasticsearchVectorStore;
@@ -72,7 +73,7 @@ public class OpenAIService {
 
         // 옵션
         OpenAiChatOptions options = OpenAiChatOptions.builder()
-                .model("gpt-5-mini")
+                .model(OpenAiApi.ChatModel.GPT_5_MINI)
                 .temperature(1.0)    // gpt-5 모델은 temperature 값 무조건 1.0
                 .build();
 
@@ -108,7 +109,7 @@ public class OpenAIService {
 
         // 옵션
         OpenAiChatOptions options = OpenAiChatOptions.builder()
-                .model("gpt-5-mini")
+                .model(OpenAiApi.ChatModel.GPT_5_MINI)
                 .temperature(1.0)    // gpt-5 모델은 temperature 값 무조건 1.0
                 .build();
 
