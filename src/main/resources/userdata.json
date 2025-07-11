@@ -1,0 +1,84 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "name": "김철수",
+      "email": "kim.chulsoo@example.com",
+      "age": 28,
+      "phone": "010-1234-5678",
+      "address": {
+        "city": "서울",
+        "district": "강남구",
+        "street": "테헤란로 123",
+        "zipCode": "06234"
+      },
+      "isActive": true,
+      "role": "user",
+      "createdAt": "2024-01-15T09:30:00Z"
+    },
+    {
+      "id": 2,
+      "name": "이영희",
+      "email": "lee.younghee@example.com",
+      "age": 32,
+      "phone": "010-9876-5432",
+      "address": {
+        "city": "부산",
+        "district": "해운대구",
+        "street": "해운대로 456",
+        "zipCode": "48099"
+      },
+      "isActive": true,
+      "role": "admin",
+      "createdAt": "2024-02-20T14:15:00Z"
+    },
+    {
+      "id": 3,
+      "name": "박민수",
+      "email": "park.minsoo@example.com",
+      "age": 25,
+      "phone": "010-5555-7777",
+      "address": {
+        "city": "인천",
+        "district": "연수구",
+        "street": "센트럴로 789",
+        "zipCode": "21990"
+      },
+      "isActive": false,
+      "role": "user",
+      "createdAt": "2024-03-10T11:45:00Z"
+    },
+    {
+      "id": 4,
+      "name": "정수진",
+      "email": "jung.soojin@example.com",
+      "age": 35,
+      "phone": "010-3333-9999",
+      "address": {
+        "city": "대전",
+        "district": "유성구",
+        "street": "대학로 321",
+        "zipCode": "34126"
+      },
+      "isActive": true,
+      "role": "moderator",
+      "createdAt": "2024-04-05T16:20:00Z"
+    },
+    {
+      "id": 5,
+      "name": "최동욱",
+      "email": "choi.dongwook@example.com",
+      "age": 29,
+      "phone": "010-7777-2222",
+      "address": {
+        "city": "광주",
+        "district": "서구",
+        "street": "상무대로 555",
+        "zipCode": "61945"
+      },
+      "isActive": true,
+      "role": "user",
+      "createdAt": "2024-05-12T08:00:00Z"
+    }
+  ]
+}
